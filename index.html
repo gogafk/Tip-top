@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Крестики-Нолики</title>
+
+    <style>
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            text-align: center;
+
+            margin-top: 50px;
+
+            background: url('./planeta_galaktika_vselennaia_121293_3840x2160.jpg') no-repeat center center fixed;
+
+            background-size: cover;
+
+            color: white;
+
+        }
+
+        .board {
+
+            display: grid;
+
+            grid-template-columns: repeat(3, 100px);
+
+            grid-gap: 5px;
+
+            justify-content: center;
+
+        }
+
+        .cell {
+
+            width: 100px;
+
+            height: 100px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 2em;
+
+            background-color: rgba(46, 125, 50, 0.8); /* Полупрозрачный зелёный фон */
+
+            border: 1px solid #1b5e20; /* Тёмно-зелёный бордюр */
+
+            color: white;
+
+            cursor: pointer;
+
+        }
+
+        .cell.taken {
+
+            pointer-events: none;
+
+        }
+
+        .winner {
+
+            margin-top: 20px;
+
+            font-size: 1.5em;
+
+            color: #76ff03; /* Светло-зелёный текст */
+
+        }
+
+        button {
+
+            margin-top: 20px;
+
+            padding: 10px 20px;
+
+            font-size: 1em;
+
+            background-color: #43a047; /* Зелёная кнопка */
+
+            color: white;
+
+            border: none;
+
+            cursor: pointer;
+
+            border-radius: 5px;
+
+        }
+
+        button:hover {
+
+            background-color: #388e3c;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <h1>Крестики-Нолики</h1>
+
+    <div class="board" id="board"></div>
+
+    <div class="winner" id="winner"></div>
+
+    <button onclick="resetGame()">Начать заново</button>
+
+    <script>
+
+        const board = document.getElementById('board');
+
+        const winnerDisplay = document.getElementById('winner');
+
+        let currentPlayer = 'X';
+
+        let playerSymbol = 'X';
+
+        let botSymbol = 'O';
+
+        let gameBoard = Array(9).fill(null);
+
+        let lastWinner = null; // Кто победил в последний раз
+
+        function createBoard() {
+
+            board.innerHTML = '';
+
+            gameBoard.forEach((_, index) => {
+
+                const cell = document.createElement('div');
+
+                cell.classList.add('cell');
+
+                cell.dataset.index = index;
+
+                cell.addEventListener('click', handleMove);
+
+                board.appendChild(cell);
+
+            });
+
+        }
+
+        function handleMove(event) {
+
+            const index = event.target.dataset.index;
+
+            if (!gameBoard[index] && currentPlayer === playerSymbol) {
+
+                makeMove(index, playerSymbol);
+
+                if (!checkWinner() && gameBoard.some(cell => cell === null)) {
+
+                    setTimeout(botMove, 500); // Бот делает ход через 500 мс
+
+                }
+
+            }
+
+        }
+
+        function botMove() {
+
+            const availableMoves = gameBoard
+
+                .map((cell, index) => (cell === null ? index : null))
+
+                .filter(index => index !== null);
+
+            const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+
+            makeMove(randomMove, botSymbol);
+
+        }
+
+        function makeMove(index, player) {
+
+            gameBoard[index] = player;
+
+            const cell = document.querySelector(`.cell[data-index='${index}']`);
+
+            cell.textContent = player;
+
+            cell.classList.add('taken');
+
+            if (checkWinner()) {
+
+                winnerDisplay.textContent = `Победитель: ${player}`;
+
+                lastWinner = player;
+
+                endGame();
+
+            } else if (gameBoard.every(cell => cell)) {
+
+                winnerDisplay.textContent = 'Ничья!';
+
+            } else {
+
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+
+            }
+
+        }
+
+        function checkWinner() {
+
+            const winningCombinations = [
+
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Горизонтальные
+
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Вертикальные
+
+                [0, 4, 8], [2, 4, 6]            // Диагональные
+
+            ];
+
+            return winningCombinations.some(combination =>
+
+                combination.every(index => gameBoard[index] === currentPlayer)
+
+            );
+
+        }
+
+        function endGame() {
+
+            document.querySelectorAll('.cell').forEach(cell => cell.classList.add('taken'));
+
+        }
+
+        function resetGame() {
+
+            if (lastWinner === playerSymbol) {
+
+                // Меняем стороны, если человек выиграл
+
+                [playerSymbol, botSymbol] = [botSymbol, playerSymbol];
+
+            }
+
+            gameBoard = Array(9).fill(null);
+
+            currentPlayer = playerSymbol === 'X' ? 'X' : 'O';
+
+            winnerDisplay.textContent = '';
+
+            createBoard();
+
+            if (currentPlayer === botSymbol) {
+
+                setTimeout(botMove, 500); // Если бот начинает, делает первый ход
+
+            }
+
+        }
+
+        createBoard();
+
+    </script>
+
+</body>
+
+</html>
+
